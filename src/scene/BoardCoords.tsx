@@ -19,7 +19,7 @@ function createTextTexture(text: string): THREE.CanvasTexture {
   canvas.height = size;
   const ctx = canvas.getContext('2d')!;
   ctx.clearRect(0, 0, size, size);
-  ctx.fillStyle = '#2a1808';
+  ctx.fillStyle = '#ffffff';
   ctx.font = `bold ${Math.round(size * 0.7)}px Georgia, "Times New Roman", serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
