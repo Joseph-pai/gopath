@@ -3,9 +3,10 @@ import { useProgress } from '../store/useProgress';
 
 interface LevelMapProps {
   onSelectLevel: (levelId: number) => void;
+  onEnterFreePlay: () => void;
 }
 
-export default function LevelMap({ onSelectLevel }: LevelMapProps) {
+export default function LevelMap({ onSelectLevel, onEnterFreePlay }: LevelMapProps) {
   const progress = useProgress();
 
   const getLevelStatus = (levelId: number): 'completed' | 'unlocked' | 'locked' => {
@@ -115,7 +116,7 @@ export default function LevelMap({ onSelectLevel }: LevelMapProps) {
         {/* 自由对弈入口 */}
         <div className="mt-10">
           <button 
-            onClick={() => alert('自由对弈模式将在阶段5实现！')}
+            onClick={onEnterFreePlay}
             className="w-full py-4 bg-gradient-to-r from-gray-700 to-gray-900 text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5"
           >
             ♟️ 进入自由对弈模式

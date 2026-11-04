@@ -62,6 +62,22 @@ export default function App() {
     setViewMode('home');
   }, []);
 
+  const enterFreePlay = useCallback(() => {
+    setBoard(createBoard(19));
+    setBoardSize(19);
+    setCurrentPlayer('black');
+    setMoveHistory([]);
+    setViewMode('play');
+  }, []);
+
+  const resetPlay = useCallback((size?: BoardSize) => {
+    const s = size ?? boardSize;
+    setBoard(createBoard(s));
+    setBoardSize(s);
+    setCurrentPlayer('black');
+    setMoveHistory([]);
+  }, [boardSize]);
+
   const handleCompleteLastStep = useCallback(() => {
     if (currentLevelId >= 1 && currentLevelId <= 10) {
       progress.completeLevel(currentLevelId);
@@ -153,7 +169,101 @@ export default function App() {
 
   // ========== 条件渲染在所有 hooks 之后 ==========
   if (viewMode === 'home') {
-    return <LevelMap onSelectLevel={enterLevel} />;
+    return <LevelMap onSelectLevel={enterLevel} onEnterFreePlay={enterFreePlay} />;
+  }
+
+  // 自由对弈视图
+  if (viewMode === 'play') {
+    return (
+      <div className="h-screen bg-gradient-to-br from-amber-50 to-orange-100 flex flex-col overflow-hidden">
+        <header className="bg-stone-800 text-white px-4 py-3 shadow-lg flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={goHome}
+              className="px-3 py-1.5 bg-stone-700 hover:bg-stone-600 rounded-lg text-sm font-medium transition-colors"
+            >
+              ← 返回地图
+            </button>
+            <h1 className="text-lg font-bold">♟️ 自由对弈</h1>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-1 bg-stone-700 rounded-lg p-1">
+              {([9, 13, 19] as BoardSize[]).map((s) => (
+                <button
+                  key={s}
+                  onClick={() => resetPlay(s)}
+                  className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+                    boardSize === s ? 'bg-amber-500 text-white' : 'text-stone-300 hover:bg-stone-600'
+                  }`}
+                >
+                  {s}路
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => resetPlay()}
+              className="px-3 py-1.5 bg-red-600 hover:bg-red-500 rounded-lg text-sm font-medium transition-colors"
+            >
+              ↺ 重新开始
+            </button>
+          </div>
+        </header>
+
+        <main className="flex-1 relative bg-stone-100 min-h-0">
+          <GoScene
+            boardSize={boardSize}
+            board={board}
+            setBoard={setBoard}
+            currentPlayer={currentPlayer}
+            setCurrentPlayer={setCurrentPlayer}
+            moveHistory={moveHistory}
+            setMoveHistory={setMoveHistory}
+            boardMode="play"
+          />
+
+          {/* 数子得分面板 */}
+          <div className="absolute top-4 left-4 bg-white/95 backdrop-blur rounded-lg px-4 py-3 shadow-lg text-sm min-w-[240px]">
+            <div className="font-bold text-stone-900 mb-2">📊 数子得分</div>
+            <div className="text-gray-800 space-y-1">
+              <div className="flex items-center justify-between gap-3">
+                <span>⚫ 黑方</span>
+                <span className="font-mono text-xs">
+                  子 {score.blackStones} + 地 {score.blackTerritory} = <span className="font-bold text-base">{score.black}</span>
+                </span>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <span>⚪ 白方</span>
+                <span className="font-mono text-xs">
+                  子 {score.whiteStones} + 地 {score.whiteTerritory} + 贴 {score.komi} = <span className="font-bold text-base">{score.white}</span>
+                </span>
+              </div>
+            </div>
+            <div className="mt-2 pt-2 border-t border-gray-200 font-semibold text-sm">
+              {score.winner === 'draw' ? (
+                <span className="text-gray-500">当前平局</span>
+              ) : score.winner === 'black' ? (
+                <span className="text-gray-900">⚫ 黑方领先 {score.black - score.white} 分</span>
+              ) : (
+                <span className="text-gray-900">⚪ 白方领先 {score.white - score.black} 分</span>
+              )}
+            </div>
+          </div>
+
+          {/* 当前落子方提示 */}
+          <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur rounded-lg px-3 py-2 shadow text-xs text-gray-600">
+            <div>⚫ 黑子: {stoneCounts.black} (提 {capturedCounts.blackCap})</div>
+            <div>⚪ 白子: {stoneCounts.white} (提 {capturedCounts.whiteCap})</div>
+            <div className="mt-1 font-semibold text-sm">
+              {currentPlayer === 'black' ? '⚫ 黑子' : '⚪ 白子'} 落子
+            </div>
+          </div>
+        </main>
+
+        <footer className="bg-stone-800 text-stone-300 text-center py-2 text-xs">
+          💡 黑白双方轮流落子 · 点击棋盘落子 · 拖拽旋转 · 双指缩放/平移
+        </footer>
+      </div>
+    );
   }
 
   // lesson 视图
