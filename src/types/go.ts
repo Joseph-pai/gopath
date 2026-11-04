@@ -33,6 +33,14 @@ export interface ScoreResult {
   whiteTerritory: number;
 }
 
+// 领地信息（一块被单色棋包围的空点区域）
+export interface TerritoryRegion {
+  points: Point[];
+  color: Color;
+  index: number;  // 编号（1-based，按棋盘扫描顺序）
+  center: Point;  // 中心点（用于在棋盘上显示编号）
+}
+
 // 游戏模式
 export type BoardMode = 'lesson' | 'play' | 'review';
 

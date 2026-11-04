@@ -7,13 +7,14 @@ import { BoardCoordinateLabels } from './BoardCoords';
 import Stone, { CapturedStone } from './Stone';
 import Highlight from './Highlight';
 import { tryPlaceStone } from '../lib/goRules';
-import type { Board, Color, BoardSize, Point, HighlightType, Move } from '../types/go';
+import type { Board, Color, BoardSize, Point, HighlightType, Move, TerritoryRegion } from '../types/go';
 
 interface GoSceneProps {
   boardSize: BoardSize;
   boardMode?: 'lesson' | 'play' | 'review';
   showLiberties?: Point[];
   showHighlights?: { point: Point; type: HighlightType }[];
+  territoryMarks?: TerritoryRegion[];
   allowedMoves?: Point[];
   cellSize?: number;
   onPlaceStone?: (x: number, y: number, color: Color, result: {
@@ -91,6 +92,54 @@ function ClickHandler({
   return null;
 }
 
+// 用 Canvas 生成领地编号纹理（圆形底 + 数字）
+function createTerritoryTexture(text: string, color: Color): THREE.CanvasTexture {
+  const size = 128;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d')!;
+  ctx.clearRect(0, 0, size, size);
+
+  const r = size * 0.46;
+  ctx.beginPath();
+  ctx.arc(size / 2, size / 2, r, 0, Math.PI * 2);
+  ctx.fillStyle = color === 'black' ? 'rgba(20,20,20,0.88)' : 'rgba(255,255,255,0.92)';
+  ctx.fill();
+  ctx.strokeStyle = color === 'black' ? '#ffffff' : '#444444';
+  ctx.lineWidth = size * 0.04;
+  ctx.stroke();
+
+  ctx.fillStyle = color === 'black' ? '#ffffff' : '#1a1a1a';
+  ctx.font = `bold ${Math.round(size * 0.58)}px Arial, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, size / 2, size / 2 + size * 0.02);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.anisotropy = 8;
+  texture.minFilter = THREE.LinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  return texture;
+}
+
+// 领地编号贴片（平铺在棋盘上，标记领地中心位置）
+function TerritoryLabel({ text, color, position, cellSize }: {
+  text: string;
+  color: Color;
+  position: [number, number, number];
+  cellSize: number;
+}) {
+  const texture = useMemo(() => createTerritoryTexture(text, color), [text, color]);
+  const s = cellSize * 0.6;
+  return (
+    <mesh position={position} rotation={[-Math.PI / 2, 0, 0]}>
+      <planeGeometry args={[s, s]} />
+      <meshBasicMaterial map={texture} transparent depthWrite={false} />
+    </mesh>
+  );
+}
+
 export default function GoScene({
   boardSize,
   board,
@@ -102,6 +151,7 @@ export default function GoScene({
   boardMode = 'play',
   showLiberties,
   showHighlights,
+  territoryMarks,
   allowedMoves,
   cellSize = 1,
   onPlaceStone,
@@ -211,6 +261,23 @@ export default function GoScene({
     ));
   }, [showHighlights, cellSize, halfBoard]);
 
+  const territoryMarkNodes = useMemo(() => {
+    if (!territoryMarks || territoryMarks.length === 0) return null;
+    return territoryMarks.map((t) => {
+      const worldX = -halfBoard + t.center.x * cellSize;
+      const worldZ = -halfBoard + t.center.y * cellSize;
+      return (
+        <TerritoryLabel
+          key={`terr-${t.index}`}
+          text={String(t.index)}
+          color={t.color}
+          position={[worldX, 0.32, worldZ]}
+          cellSize={cellSize}
+        />
+      );
+    });
+  }, [territoryMarks, halfBoard, cellSize]);
+
   const capturedStones = animatingCaptured.map((p, i) => (
     <CapturedStone
       key={`cap-${i}`}
@@ -246,6 +313,7 @@ export default function GoScene({
         {capturedStones}
         {libertyHighlights}
         {otherHighlights}
+        {territoryMarkNodes}
         
         <ClickHandler 
           boardSize={boardSize} 

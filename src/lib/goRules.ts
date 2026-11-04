@@ -1,7 +1,7 @@
 // 围棋规则核心引擎
 // 实现：气、提子、禁入点、劫争、中国规则数子
 
-import type { Color, Board, Point, PlaceResult, Group, ScoreResult } from '../types/go';
+import type { Color, Board, Point, PlaceResult, Group, ScoreResult, TerritoryRegion } from '../types/go';
 
 // 创建空棋盘
 export function createBoard(size: number): Board {
@@ -292,4 +292,54 @@ export function analyzeGroups(board: Board): Group[] {
     }
   }
   return groups;
+}
+
+// 分析领地：被单色活棋完全包围的空点区域，按扫描顺序编号
+export function analyzeTerritory(board: Board): TerritoryRegion[] {
+  const size = board.length;
+  const visited = new Set<string>();
+  const regions: TerritoryRegion[] = [];
+
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      if (board[y][x] === null && !visited.has(`${x},${y}`)) {
+        const region: Point[] = [];
+        const borders = new Set<Color>();
+        const queue: Point[] = [{ x, y }];
+        visited.add(`${x},${y}`);
+
+        while (queue.length > 0) {
+          const p = queue.shift()!;
+          region.push(p);
+          for (const n of getNeighbors(p.x, p.y, size)) {
+            const key = `${n.x},${n.y}`;
+            const c = board[n.y][n.x];
+            if (c === null) {
+              if (!visited.has(key)) {
+                visited.add(key);
+                queue.push(n);
+              }
+            } else {
+              borders.add(c);
+            }
+          }
+        }
+
+        // 只被一种颜色包围才算领地
+        if (borders.size === 1) {
+          const color: Color = borders.has('black') ? 'black' : 'white';
+          // 中心点 = 区域重心（四舍五入到整数坐标）
+          const cx = Math.round(region.reduce((s, p) => s + p.x, 0) / region.length);
+          const cy = Math.round(region.reduce((s, p) => s + p.y, 0) / region.length);
+          regions.push({
+            points: region,
+            color,
+            index: regions.length + 1,
+            center: { x: cx, y: cy },
+          });
+        }
+      }
+    }
+  }
+  return regions;
 }

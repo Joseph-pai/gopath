@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo } from 'react';
 import GoScene from './scene/GoScene';
 import LessonPanel from './components/LessonPanel';
 import LevelMap from './components/LevelMap';
-import { createBoard, scoreChinese, analyzeGroups } from './lib/goRules';
+import { createBoard, scoreChinese, analyzeGroups, analyzeTerritory } from './lib/goRules';
 import { getLevel } from './data/levels';
 import { arrayToDisplay } from './scene/BoardCoords';
 import { useProgress } from './store/useProgress';
@@ -152,6 +152,9 @@ export default function App() {
   // 实时数子得分（棋子 + 领地，白方含贴目）
   const score = useMemo(() => scoreChinese(board), [board]);
 
+  // 领地编号（自由对弈时显示在棋盘上）
+  const territory = useMemo(() => analyzeTerritory(board), [board]);
+
   // 动态计算所有棋块的气（用于"气"教学步骤）
   const groupStats = useMemo(() => {
     if (!currentStep?.showAllLiberties) return null;
@@ -219,6 +222,7 @@ export default function App() {
             moveHistory={moveHistory}
             setMoveHistory={setMoveHistory}
             boardMode="play"
+            territoryMarks={territory}
           />
 
           {/* 数子得分面板 */}
