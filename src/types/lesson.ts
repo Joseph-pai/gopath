@@ -10,6 +10,7 @@ export interface LessonStep {
   setupBoardSize?: BoardSize;
   showCoordinates?: boolean;
   showLiberties?: Point[];
+  showAllLiberties?: boolean; // 动态高亮棋盘上所有棋块的气（用于"气"的教学）
   highlights?: { point: Point; type: HighlightType }[];
   forbiddenPoints?: Point[];
   allowedMoves?: Point[];

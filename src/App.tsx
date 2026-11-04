@@ -2,11 +2,11 @@ import { useState, useCallback, useMemo } from 'react';
 import GoScene from './scene/GoScene';
 import LessonPanel from './components/LessonPanel';
 import LevelMap from './components/LevelMap';
-import { createBoard, scoreChinese } from './lib/goRules';
+import { createBoard, scoreChinese, analyzeGroups } from './lib/goRules';
 import { getLevel } from './data/levels';
 import { arrayToDisplay } from './scene/BoardCoords';
 import { useProgress } from './store/useProgress';
-import type { Board, Color, BoardSize, Move, HighlightType } from './types/go';
+import type { Board, Color, BoardSize, Move, HighlightType, Point } from './types/go';
 
 type ViewMode = 'home' | 'lesson' | 'play';
 
@@ -136,6 +136,21 @@ export default function App() {
   // 实时数子得分（棋子 + 领地，白方含贴目）
   const score = useMemo(() => scoreChinese(board), [board]);
 
+  // 动态计算所有棋块的气（用于"气"教学步骤）
+  const groupStats = useMemo(() => {
+    if (!currentStep?.showAllLiberties) return null;
+    return analyzeGroups(board);
+  }, [currentStep, board]);
+
+  const dynamicLiberties = useMemo<Point[] | undefined>(() => {
+    if (!groupStats) return undefined;
+    const liberties: Point[] = [];
+    for (const g of groupStats) {
+      for (const l of g.liberties) liberties.push(l);
+    }
+    return liberties;
+  }, [groupStats]);
+
   // ========== 条件渲染在所有 hooks 之后 ==========
   if (viewMode === 'home') {
     return <LevelMap onSelectLevel={enterLevel} />;
@@ -171,7 +186,7 @@ export default function App() {
             setMoveHistory={setMoveHistory}
             boardMode="lesson"
             allowedMoves={currentStep?.allowedMoves}
-            showLiberties={currentStep?.showLiberties}
+            showLiberties={dynamicLiberties ?? currentStep?.showLiberties}
             showHighlights={lessonHighlights}
             onPlaceStone={(x, y) => {
               handlePlaceStoneCheck(x, y);
@@ -220,6 +235,23 @@ export default function App() {
                   <span className="text-gray-900">⚪ 白方领先 {score.white - score.black} 分</span>
                 )}
               </div>
+            </div>
+          ) : currentStep?.showAllLiberties ? (
+            <div className="absolute top-4 left-4 bg-white/95 backdrop-blur rounded-lg px-4 py-3 shadow-lg text-sm min-w-[200px]">
+              <div className="font-bold text-amber-900 mb-2">💨 每块棋的气数</div>
+              {groupStats && groupStats.length === 0 ? (
+                <div className="text-gray-400">空棋盘，落一子试试</div>
+              ) : (
+                <div className="text-gray-800 space-y-1">
+                  {groupStats?.map((g, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <span>{g.color === 'black' ? '⚫' : '⚪'}</span>
+                      <span className="font-mono font-semibold">{g.liberties.length} 气</span>
+                      <span className="text-gray-400 text-xs">({g.stones.length}子)</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           ) : (
             <div className="absolute top-4 left-4 bg-white/90 backdrop-blur rounded-lg px-3 py-2 shadow text-xs text-gray-600">

@@ -272,3 +272,24 @@ export function countStones(board: Board): { black: number; white: number } {
   
   return { black, white };
 }
+
+// 分析棋盘上所有棋块（连通块），返回每块及其气
+export function analyzeGroups(board: Board): Group[] {
+  const size = board.length;
+  const visited = new Set<string>();
+  const groups: Group[] = [];
+  
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const key = `${x},${y}`;
+      if (board[y][x] && !visited.has(key)) {
+        const group = getGroup(board, x, y);
+        for (const s of group.stones) {
+          visited.add(`${s.x},${s.y}`);
+        }
+        groups.push(group);
+      }
+    }
+  }
+  return groups;
+}

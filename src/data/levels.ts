@@ -45,23 +45,13 @@ export const level10: Level = {
     {
       id: '10.3',
       title: '什么是"气"？',
-      content: '"气"是一颗棋子上下左右相邻的空交叉点。中央的这颗黑子有4口气，已用绿色圆环标出。你试着占掉其中一口，气就少一口——当气被全部占满，棋子就会被提走。',
-      task: '点击一个绿色圆环（黑子的气），落白子占掉这一口气。',
+      content: '"气"是一颗棋子上下左右相邻的空交叉点。落子后，绿色圆环会实时标出每块棋的气，左上角面板显示每块棋的气数。试试在不同位置落子：中央4气、边上3气、角上2气。',
+      task: '在棋盘不同位置自由落子（中央、边、角），观察每块棋的气数与绿色圆环如何变化。',
       showCoordinates: true,
       setupBoardSize: 9,
-      startPlayer: 'white',
-      setupBoard: (() => {
-        const board = createBoard(9);
-        board[4][4] = 'black'; // 中央黑子 x=4, y=4
-        return board;
-      })(),
-      showLiberties: [
-        { x: 3, y: 4 }, { x: 5, y: 4 }, { x: 4, y: 3 }, { x: 4, y: 5 },
-      ],
-      allowedMoves: [
-        { x: 3, y: 4 }, { x: 5, y: 4 }, { x: 4, y: 3 }, { x: 4, y: 5 },
-      ],
-      feedback: '正确！你占掉了黑子的一口气，现在它只剩3口气了。',
+      startPlayer: 'black',
+      showAllLiberties: true,
+      feedback: '很好！记住：中央4气、边上3气、角上2气，这是围棋最基本的规律。',
     },
     {
       id: '10.4',
