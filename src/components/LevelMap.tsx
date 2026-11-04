@@ -10,8 +10,7 @@ export default function LevelMap({ onSelectLevel }: LevelMapProps) {
 
   const getLevelStatus = (levelId: number): 'completed' | 'unlocked' | 'locked' => {
     if (progress.completedLevels.includes(levelId)) return 'completed';
-    if (levelId >= progress.currentLevel) return 'unlocked';
-    return 'locked';
+    return 'unlocked';
   };
 
   const getStatusIcon = (status: string) => {
@@ -53,7 +52,14 @@ export default function LevelMap({ onSelectLevel }: LevelMapProps) {
             return (
               <div
                 key={level.id}
-                onClick={() => clickable && onSelectLevel(level.id)}
+                onClick={() => {
+                  if (!clickable) return;
+                  if (level.steps.length === 0) {
+                    alert(`「${level.title}」内容即将推出，敬请期待！`);
+                    return;
+                  }
+                  onSelectLevel(level.id);
+                }}
                 className={`
                   relative rounded-2xl p-5 shadow-lg transition-all duration-300
                   border-2 ${status === 'completed' ? 'border-green-300 bg-green-50' : 
@@ -134,7 +140,7 @@ export default function LevelMap({ onSelectLevel }: LevelMapProps) {
       
       {/* 底部说明 */}
       <footer className="text-center text-gray-400 text-xs pb-8">
-        💡 Level 10 默认解锁，完成当前关卡后自动解锁下一关
+        💡 所有关卡自由进入，点击任意一级开始学习
       </footer>
     </div>
   );
