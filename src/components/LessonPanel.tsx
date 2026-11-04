@@ -14,6 +14,7 @@ export default function LessonPanel({
   currentStepIndex,
   onStepChange,
   onRestartLesson,
+  onCompleteStep,
 }: LessonPanelProps) {
   const currentStep = level.steps[currentStepIndex];
   const [taskDone, setTaskDone] = useState(false);
@@ -117,8 +118,9 @@ export default function LessonPanel({
           <button
             onClick={() => {
               if (isLastStep) {
-                // 最后一步 - 标记完成
+                // 最后一步 - 标记完成并记录进度
                 setTaskDone(true);
+                onCompleteStep?.(currentStep);
               } else {
                 setTaskDone(false);
                 onStepChange(currentStepIndex + 1);
